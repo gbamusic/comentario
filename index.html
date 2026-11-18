@@ -78,7 +78,14 @@ input:focus,textarea:focus{outline:none;border-color:var(--ambar)}
       <div class="f"><label for="h1">@ de quem comentou</label><input type="text" id="h1" placeholder="@nomedeusuario"></div>
       <div class="f"><label for="t1">Comentário</label><textarea id="t1" placeholder="Cole aqui o comentário, com emojis e tudo"></textarea>
         <p class="help" id="hintB" hidden>No pôster, frases curtas (até umas 12 palavras) ficam melhores.</p></div>
-      <label class="ck"><input type="checkbox" id="hide"> Esconder o @ (mostra só a inicial)</label>
+      <label class="ck"><input type="checkbox" id="hide"> Censurar o @ (ex.: @ma*****)</label>
+      <fieldset style="margin-top:12px"><legend>Comentou no</legend>
+        <div class="chips" id="redes">
+          <button type="button" class="chip" data-r="YouTube" aria-pressed="true">YouTube</button>
+          <button type="button" class="chip" data-r="Instagram" aria-pressed="false">Instagram</button>
+          <button type="button" class="chip" data-r="TikTok" aria-pressed="false">TikTok</button>
+        </div>
+      </fieldset>
 
       <div class="extra" id="exC" hidden>
         <div class="f"><label for="resp">Resposta do @gbaworship</label><textarea id="resp" placeholder="Escreva a resposta de vocês"></textarea></div>
@@ -112,7 +119,7 @@ const EMO = ", 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-s
 const cv = $("cv"), g = cv.getContext("2d");
 const img = src => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
 let LOGO_B, LOGO_P;
-const st = { v: "A", t: "nevoa" };
+const st = { v: "A", t: "nevoa", r: "YouTube" };
 
 // ---------- helpers de texto ----------
 function font(w, s, fam) { g.font = w + " " + s + "px " + (fam === "a" ? "Anton" + EMO : "Manrope" + EMO); }
@@ -121,7 +128,16 @@ function wrap(text, maxW) {
   String(text).split(/\n/).forEach(par => {
     const words = par.split(/\s+/).filter(Boolean); let line = "";
     if (!words.length) { out.push(""); return; }
-    words.forEach(w => { const t = line ? line + " " + w : w; if (g.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; });
+    const seg = window.Intl && Intl.Segmenter ? new Intl.Segmenter("pt", { granularity: "grapheme" }) : null;
+    const parts = w => seg ? [...seg.segment(w)].map(x => x.segment) : Array.from(w);
+    words.forEach(w => {
+      const t = line ? line + " " + w : w;
+      if (g.measureText(t).width <= maxW) { line = t; return; }
+      if (line) { out.push(line); line = ""; }
+      if (g.measureText(w).width <= maxW) { line = w; return; }
+      // palavra maior que a linha (ex.: muitos emojis colados): quebra por caractere
+      parts(w).forEach(ch => { if (g.measureText(line + ch).width > maxW && line) { out.push(line); line = ch; } else line += ch; });
+    });
     out.push(line);
   });
   return out;
@@ -142,7 +158,8 @@ function heart(x, y, s, c) {
   g.save(); g.translate(x, y); g.scale(s / 24, s / 24); g.fillStyle = c;
   g.fill(new Path2D("M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z")); g.restore();
 }
-function shownHandle(h) { if ($("hide").checked) return ""; h = (h || "").trim(); return h ? (h.startsWith("@") ? h : "@" + h) : "@nomedeusuario"; }
+function censor(h) { const n = h.replace(/^@/, ""); return "@" + n.slice(0, 2) + "*".repeat(Math.max(4, Math.min(8, n.length - 2))); }
+function shownHandle(h) { h = (h || "").trim(); h = h ? (h.startsWith("@") ? h : "@" + h) : "@nomedeusuario"; return $("hide").checked ? censor(h) : h; }
 function theme() {
   const t = st.t;
   const claro = t === "creme" || t === "ambar";
@@ -162,40 +179,46 @@ function drawA(T) {
   base(T, true);
   const cardBg = st.t === "creme" ? COR.noite : COR.creme, cardFg = st.t === "creme" ? COR.creme : COR.noite;
   const h = shownHandle($("h1").value), txt = $("t1").value.trim() || "Cole o comentário ao lado.";
-  const pad = 56, cw = W - M * 2, tw = cw - pad * 2;
+  const hid = !h, head = hid ? 0 : 84 + 30;
+  const pad = 56, cw = W - M * 2, tw = cw - pad * 2 - (hid ? 56 : 0);
   let s = 54, lines, lh;
-  for (;;) { font(700, s); lines = wrap(txt, tw); lh = s * 1.32; if (pad + 84 + 30 + lines.length * lh + pad <= 1120 || s <= 26) break; s -= 2; }
-  const ch = pad + 84 + 30 + lines.length * lh - (lh - s) + pad, y = (H - ch) / 2;
+  for (;;) { font(700, s); lines = wrap(txt, tw); lh = s * 1.32; if (pad + head + lines.length * lh + pad <= 1120 || s <= 26) break; s -= 2; }
+  const ch = pad + head + lines.length * lh - (lh - s) + pad, y = (H - ch) / 2;
   g.save(); g.shadowColor = "rgba(20,28,33,.35)"; g.shadowBlur = 60; g.shadowOffsetY = 30; g.fillStyle = cardBg; rr(M, y, cw, ch, 36); g.fill(); g.restore();
-  avatar(M + pad, y + pad, 84, $("hide").checked ? "•" : h, COR.nevoa, COR.creme);
-  g.fillStyle = cardFg; font(800, 30); g.fillText(h || "Comentário", M + pad + 108, y + pad + 38);
-  font(600, 22); g.fillStyle = st.t === "creme" ? COR.clara || "#A9B8BF" : COR.nevoa; g.fillText("comentou", M + pad + 108, y + pad + 70);
-  heart(M + cw - pad - 34, y + pad + 25, 34, COR.ambar);
+  if (!hid) {
+    avatar(M + pad, y + pad, 84, h, COR.nevoa, COR.creme);
+    g.fillStyle = cardFg; font(800, 30); g.fillText(h, M + pad + 108, y + pad + 38);
+    font(600, 22); g.fillStyle = st.t === "creme" ? COR.clara : COR.nevoa; g.fillText("comentou no " + st.r, M + pad + 108, y + pad + 70);
+  }
+  heart(M + cw - pad - 34, y + pad + (hid ? 4 : 25), 34, COR.ambar);
   g.fillStyle = cardFg; font(700, s);
-  lines.forEach((l, i) => g.fillText(l, M + pad, y + pad + 84 + 30 + s + i * lh));
+  lines.forEach((l, i) => g.fillText(l, M + pad, y + pad + head + s + i * lh));
 }
 function drawB(T) {
   base(T, false);
   const txt = ($("t1").value.trim() || "Cole o comentário ao lado.").toUpperCase();
   let s = 130, lines, lh;
-  for (;;) { font(400, s, "a"); lines = wrap(txt, W - M * 2); lh = s * .95; if (lines.length * lh <= 780 || s <= 50) break; s -= 4; }
-  const block = 110 + 20 + lines.length * lh, y0 = (H - block) / 2 - 30;
+  const EMJ = /\p{Extended_Pictographic}/u;
+  const lhs = () => lines.map((l, i) => i === 0 ? 0 : (EMJ.test(l) || EMJ.test(lines[i - 1]) ? s * 1.18 : s * .95));
+  let steps;
+  for (;;) { font(400, s, "a"); lines = wrap(txt, W - M * 2); steps = lhs(); lh = steps.reduce((a, b) => a + b, 0) + s; if (lh <= 780 || s <= 50) break; s -= 4; }
+  const block = 110 + 20 + lh, y0 = (H - block) / 2 - 30;
   font(400, 220, "a"); g.fillStyle = T.acc; g.textBaseline = "top"; g.fillText("“", M, y0 - 20); g.textBaseline = "alphabetic";
   g.fillStyle = T.fg; font(400, s, "a");
-  lines.forEach((l, i) => g.fillText(l, M, y0 + 130 + s * .86 + i * lh));
+  let yy = y0 + 130 + s * .86; lines.forEach((l, i) => { yy += steps[i]; g.fillText(l, M, yy); });
   const h = shownHandle($("h1").value);
-  if (h) { g.fillStyle = T.acc; g.fillRect(M, H - 64 - 14, 60, 4); g.fillStyle = T.fg; font(800, 30); g.fillText(h, M + 78, H - 64); }
+  if (h) { g.fillStyle = T.acc; g.fillRect(M, H - 64 - 14, 60, 4); g.fillStyle = T.fg; font(800, 30); g.fillText(h, M + 78, H - 64); const hw = g.measureText(h).width; font(600, 26); g.globalAlpha = .75; g.fillText("  comentou no " + st.r, M + 78 + hw, H - 64); g.globalAlpha = 1; }
 }
 function bubble(x, y, maxW, d, title, txt, w8, bg, fg, right, avFn) {
-  const pad = 36, gap = 22, tw = maxW - pad * 2 - d - gap;
+  const gap = d ? 22 : 0, pad = 36, tw = maxW - pad * 2 - d - gap, top = title ? 28 + 14 : -6;
   font(w8, 34); const lines = wrap(txt, tw), lh = 34 * 1.35;
-  let wMax = 0; lines.forEach(l => wMax = Math.max(wMax, g.measureText(l).width)); font(800, 30); wMax = Math.max(wMax, g.measureText(title).width);
-  const bw = Math.min(maxW, pad * 2 + d + gap + wMax + 4), bh = Math.max(d, 40 + 10 + lines.length * lh) + pad * 2 - 10;
+  let wMax = 0; lines.forEach(l => wMax = Math.max(wMax, g.measureText(l).width)); font(800, 30); if (title) wMax = Math.max(wMax, g.measureText(title).width);
+  const bw = Math.min(maxW, pad * 2 + d + gap + wMax + 4), bh = Math.max(d, top + 8 + lines.length * lh) + pad * 2 - 10;
   const bx = right ? W - M - bw : x;
   g.fillStyle = bg; rr(bx, y, bw, bh, 30); g.fill();
-  avFn(bx + pad, y + pad, d);
-  g.fillStyle = fg; font(800, 30); g.fillText(title, bx + pad + d + gap, y + pad + 28);
-  font(w8, 34); lines.forEach((l, i) => g.fillText(l, bx + pad + d + gap, y + pad + 28 + 14 + 34 + i * lh));
+  if (d) avFn(bx + pad, y + pad, d);
+  g.fillStyle = fg; if (title) { font(800, 30); g.fillText(title, bx + pad + d + gap, y + pad + 28); }
+  font(w8, 34); lines.forEach((l, i) => g.fillText(l, bx + pad + d + gap, y + pad + top + 34 + i * lh));
   return bh;
 }
 function drawC(T) {
@@ -205,7 +228,7 @@ function drawC(T) {
   const h = shownHandle($("h1").value);
   const b1bg = st.t === "noite" ? COR.funda : COR.noite;
   const t1 = $("t1").value.trim() || "Cole o comentário ao lado.", r = $("resp").value.trim() || "Escreva a resposta de vocês.";
-  const y1 = 560, hb = bubble(M, y1, 840, 84, h || "Comentário", t1, 600, b1bg, COR.creme, false, (x, y, d) => avatar(x, y, d, $("hide").checked ? "•" : h, COR.nevoa, COR.creme));
+  const y1 = 560, hb = bubble(M, y1, 840, h ? 84 : 0, h, t1, 600, b1bg, COR.creme, false, (x, y, d) => avatar(x, y, d, h, COR.nevoa, COR.creme));
   bubble(M, y1 + hb + 22, 780, 84, "gbaworship", r, 700, st.t === "creme" ? COR.suave : COR.creme, COR.noite, true, logoAv);
 }
 function drawD(T) {
@@ -220,17 +243,16 @@ function drawD(T) {
   // reduz a letra se não couber
   for (;;) {
     let tot = 0; font(600, s);
-    items.forEach((it, i) => { const w = W - M * 2 - (i ? 60 : 0) - 72 - 84 - 24; tot += Math.max(84, 36 + 8 + wrap(it[1].trim(), w).length * s * 1.38) + 64 + 22; });
+    items.forEach((it, i) => { const w = W - M * 2 - (i ? 60 : 0) - 72 - (84 + 24); tot += (false ? wrap(it[1].trim(), w).length * s * 1.38 - 8 : Math.max(84, 36 + 8 + wrap(it[1].trim(), w).length * s * 1.38)) + 64 + 22; });
     if (y + tot <= H - 160 || s <= 22) break; s -= 2;
   }
   items.forEach((it, i) => {
-    const x = M + (i === 1 ? 60 : 0), w = W - M * 2 - (i ? 60 : 0), tw = w - 72 - 84 - 24;
-    const h = $("hide").checked ? "" : (it[0].trim() ? (it[0].trim().startsWith("@") ? it[0].trim() : "@" + it[0].trim()) : "@seguidor");
-    font(600, s); const lines = wrap(it[1].trim(), tw), lh = s * 1.38, ch = Math.max(84, 36 + 8 + lines.length * lh) + 64;
+    const hid = false, x = M + (i === 1 ? 60 : 0), w = W - M * 2 - (i ? 60 : 0), off = hid ? 0 : 84 + 24, tw = w - 72 - off;
+    const h = shownHandle(it[0] || "@seguidor");
+    font(600, s); const lines = wrap(it[1].trim(), tw), lh = s * 1.38, ch = (hid ? lines.length * lh - 8 : Math.max(84, 36 + 8 + lines.length * lh)) + 64;
     g.fillStyle = bgs[i]; rr(x, y, w, ch, 28); g.fill();
-    avatar(x + 36, y + 32, 84, h || "•", bgs[i] === COR.nevoa ? COR.noite : COR.nevoa, COR.creme);
-    g.fillStyle = fg; font(800, 28); g.fillText(h || "Comentário", x + 36 + 84 + 24, y + 32 + 30);
-    font(600, s); lines.forEach((l, k) => g.fillText(l, x + 36 + 84 + 24, y + 32 + 30 + 12 + s + k * lh));
+    if (!hid) { avatar(x + 36, y + 32, 84, h, bgs[i] === COR.nevoa ? COR.noite : COR.nevoa, COR.creme); g.fillStyle = fg; font(800, 28); g.fillText(h, x + 36 + 84 + 24, y + 32 + 30); }
+    g.fillStyle = fg; font(600, s); lines.forEach((l, k) => g.fillText(l, x + 36 + off, y + 32 + (hid ? 0 : 30 + 12) + s + k * lh));
     y += ch + 22;
   });
 }
@@ -245,14 +267,16 @@ function sync() {
   $("exC").hidden = st.v !== "C"; $("exD").hidden = st.v !== "D"; $("hintB").hidden = st.v !== "B";
   document.querySelectorAll("#mods .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.v === st.v)));
   document.querySelectorAll("#temas .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.t === st.t)));
+  document.querySelectorAll("#redes .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.r === st.r)));
 }
 document.querySelectorAll("#mods .chip").forEach(c => c.addEventListener("click", () => { st.v = c.dataset.v; sync(); draw(); }));
 document.querySelectorAll("#temas .chip").forEach(c => c.addEventListener("click", () => { st.t = c.dataset.t; sync(); draw(); }));
+document.querySelectorAll("#redes .chip").forEach(c => c.addEventListener("click", () => { st.r = c.dataset.r; sync(); draw(); }));
 const FIELDS = ["h1", "t1", "resp", "h2", "t2", "h3", "t3"];
 let tmr; $("form").addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(draw, 60); });
 function save() { try { const o = { st }; FIELDS.forEach(f => o[f] = $(f).value); o.hide = $("hide").checked; localStorage.setItem("gbaw-comentario", JSON.stringify(o)); } catch (e) {} }
 function load() { try { const o = JSON.parse(localStorage.getItem("gbaw-comentario") || "null"); if (!o) return; Object.assign(st, o.st || {}); FIELDS.forEach(f => { if (o[f] != null) $(f).value = o[f]; }); $("hide").checked = !!o.hide; } catch (e) {} }
-function fname() { const h = ($("h1").value || "").replace(/[^a-z0-9._-]/gi, ""); return "gbaw-comentario-" + st.v + (h ? "-" + h : "") + ".png"; }
+function fname() { const h = $("hide").checked ? "" : ($("h1").value || "").replace(/[^a-z0-9._-]/gi, ""); return "gbaw-comentario-" + st.v + (h ? "-" + h : "") + ".png"; }
 function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(el._t); el._t = setTimeout(() => el.hidden = true, 2200); }
 $("bDl").addEventListener("click", () => cv.toBlob(b => { const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = fname(); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Post baixado"); }, "image/png"));
 if (navigator.canShare) {
