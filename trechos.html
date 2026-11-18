@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Gerador de carrossel · GBA Worship</title>
+<meta name="theme-color" content="#1B242A">
+<link rel="icon" href="assets/logo.png">
+<style>
+@font-face{font-family:'Anton';src:url(assets/anton.woff2) format('woff2');font-display:block;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F}
+@font-face{font-family:'Anton';src:url(assets/anton-ext.woff2) format('woff2');font-display:block;unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:'Manrope';font-weight:600;src:url(assets/manrope-600.woff2) format('woff2');font-display:block}
+@font-face{font-family:'Manrope';font-weight:700;src:url(assets/manrope-700.woff2) format('woff2');font-display:block}
+@font-face{font-family:'Manrope';font-weight:800;src:url(assets/manrope-800.woff2) format('woff2');font-display:block}
+:root{--noite:#26323A;--funda:#3E505B;--nevoa:#5E7480;--clara:#A9B8BF;--suave:#C9D3D8;--creme:#F3ECE2;--ambar:#E98A3A;--bg:#1B242A}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--creme);font-family:Manrope,system-ui,sans-serif;line-height:1.5;padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom))}
+.wrap{max-width:1180px;margin:0 auto}
+.top{display:flex;gap:10px;flex-wrap:wrap}
+.tab{min-height:44px;display:inline-flex;align-items:center;padding:0 16px;border-radius:22px;font:800 14px Manrope;color:var(--suave);text-decoration:none;border:1.5px solid rgba(169,184,191,.35)}
+.tab.on{background:var(--creme);color:var(--noite);border-color:var(--creme)}
+h1{margin:18px 0 4px;font:400 clamp(44px,11vw,72px)/.9 Anton,Impact,sans-serif;text-transform:uppercase}
+h1 span{color:var(--ambar)}
+.lead{margin:8px 0 0;color:var(--suave);font-weight:600;font-size:15px;max-width:640px}
+.grid{display:grid;gap:24px;margin-top:24px}
+@media (min-width:960px){.grid{grid-template-columns:400px 1fr;align-items:start}.prev{position:sticky;top:16px}}
+fieldset{border:0;padding:0;margin:0 0 20px}
+legend,label{display:block;font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--clara);margin-bottom:8px}
+.f{margin-bottom:16px}
+input[type=text],textarea{width:100%;font:600 16px Manrope;color:var(--creme);background:var(--noite);border:1.5px solid rgba(169,184,191,.25);border-radius:14px;padding:13px 14px}
+textarea{min-height:88px;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:var(--ambar)}
+.help{font-size:13px;color:var(--clara);margin:6px 0 0}
+.tr{background:rgba(38,50,58,.55);border-radius:16px;padding:14px;margin-bottom:12px}
+.tr .lab{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.tr .num{font:400 30px/1 Anton;color:var(--ambar)}
+.tr input{margin-top:8px;font-size:14px;padding:10px 12px}
+.file{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.file input{position:absolute;opacity:0;width:1px;height:1px}
+.file label.btn{text-transform:none;letter-spacing:0;font:800 15px Manrope;color:var(--creme);margin:0}
+.btn{min-height:48px;border-radius:14px;border:0;font:800 15px Manrope;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:0 18px}
+.btn svg{width:20px;height:20px}
+.btn.pri{background:var(--ambar);color:var(--noite)}
+.btn.sec{background:var(--funda);color:var(--creme)}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible,.tab:focus-visible,.file label:focus-within{outline:3px solid var(--ambar);outline-offset:3px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 16px;border-radius:22px;border:1.5px solid rgba(169,184,191,.35);background:transparent;color:var(--suave);font:800 14px Manrope;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--creme);color:var(--noite);border-color:var(--creme)}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (min-width:640px){.cards{grid-template-columns:repeat(3,1fr)}}
+.cards figure{margin:0}
+.cards canvas{width:100%;height:auto;border-radius:12px;display:block;box-shadow:0 14px 34px rgba(0,0,0,.4);background:var(--noite)}
+.cards figcaption{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:13px;font-weight:700;color:var(--clara)}
+.cards figcaption button{background:none;border:0;color:var(--suave);font:800 13px Manrope;cursor:pointer;min-height:36px;padding:0 6px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.actions .btn{flex:1;min-width:160px;min-height:52px}
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--creme);color:var(--noite);font-weight:800;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <nav class="top" aria-label="Geradores"><a class="tab" href="./">Comentário</a><a class="tab on" href="trechos.html" aria-current="page">Carrossel de trechos</a></nav>
+  <h1>Qual trecho é a sua <span>oração?</span></h1>
+  <p class="lead">Escolha a foto da capa, escreva o nome da música e cole os trechos. O carrossel sai pronto: capa, um card por trecho e o card final com a pergunta.</p>
+
+  <div class="grid">
+    <form id="form" autocomplete="off" onsubmit="return false">
+      <div class="f"><label for="mus">Nome da música</label><input type="text" id="mus" placeholder="Ex.: Ainda Bem"></div>
+      <fieldset><legend>Foto da capa</legend>
+        <div class="file">
+          <label class="btn sec" for="foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-8 8"/></svg>Escolher foto<input type="file" id="foto" accept="image/*"></label>
+          <button type="button" class="btn sec" id="fotoPad">Usar a padrão</button>
+        </div>
+        <p class="help" id="fotoInfo">Usando a foto padrão da dupla.</p>
+      </fieldset>
+      <fieldset><legend>Primeira cor dos trechos</legend>
+        <div class="chips" id="cores">
+          <button type="button" class="chip" data-c="0" aria-pressed="true">Creme</button>
+          <button type="button" class="chip" data-c="1" aria-pressed="false">Névoa</button>
+          <button type="button" class="chip" data-c="2" aria-pressed="false">Âmbar</button>
+          <button type="button" class="chip" data-c="3" aria-pressed="false">Escuro</button>
+        </div>
+        <p class="help">As cores vão alternando a partir dessa.</p>
+      </fieldset>
+      <fieldset><legend>Trechos (de 2 a 6)</legend>
+        <div id="trs"></div>
+        <p class="help">Trecho vazio não entra no carrossel. A "versão curta" aparece na lista do card final; se deixar em branco, usamos o começo do trecho.</p>
+      </fieldset>
+    </form>
+
+    <section class="prev" aria-label="Prévia do carrossel">
+      <div class="cards" id="cards"></div>
+      <div class="actions">
+        <button type="button" class="btn pri" id="bAll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Baixar todos</button>
+        <button type="button" class="btn sec" id="bSh" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 8l5-5 5 5M5 14v6h14v-6"/></svg>Compartilhar</button>
+      </div>
+      <p class="help">No celular, "Compartilhar" manda todos os cards de uma vez (dá para escolher o Instagram).</p>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const W = 1080, H = 1350, M = 72, MAX = 6;
+const COR = { noite:"#26323A", funda:"#3E505B", nevoa:"#5E7480", suave:"#C9D3D8", creme:"#F3ECE2", ambar:"#E98A3A" };
+const ORDEM = ["creme", "nevoa", "ambar", "noite"];
+const EMO = ", 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif";
+const img = src => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
+let LOGO_B, LOGO_P, FOTO_PAD, FOTO = null, cor0 = 0;
+
+// ---------- campos dos trechos ----------
+const trs = $("trs");
+for (let i = 1; i <= MAX; i++) {
+  const d = document.createElement("div"); d.className = "tr";
+  d.innerHTML = `<div class="lab"><span class="num">${String(i).padStart(2, "0")}</span><label for="t${i}" style="margin:0">Trecho ${i}</label></div>
+    <textarea id="t${i}" placeholder="Cole aqui o trecho ${i}"></textarea>
+    <input type="text" id="c${i}" placeholder="Versão curta para o card final (opcional)" aria-label="Versão curta do trecho ${i}">`;
+  trs.appendChild(d);
+}
+
+// ---------- texto ----------
+function font(w, s, fam) { g.font = w + " " + s + "px " + (fam === "a" ? "Anton" + EMO : "Manrope" + EMO); }
+let g;
+function wrap(text, maxW) {
+  const out = []; const seg = window.Intl && Intl.Segmenter ? new Intl.Segmenter("pt", { granularity: "grapheme" }) : null;
+  const parts = w => seg ? [...seg.segment(w)].map(x => x.segment) : Array.from(w);
+  String(text).split(/\n/).forEach(par => {
+    const words = par.split(/\s+/).filter(Boolean); let line = "";
+    if (!words.length) return;
+    words.forEach(w => {
+      const t = line ? line + " " + w : w;
+      if (g.measureText(t).width <= maxW) { line = t; return; }
+      if (line) { out.push(line); line = ""; }
+      if (g.measureText(w).width <= maxW) { line = w; return; }
+      parts(w).forEach(ch => { if (g.measureText(line + ch).width > maxW && line) { out.push(line); line = ch; } else line += ch; });
+    });
+    out.push(line);
+  });
+  return out;
+}
+function spaced(t, x, y, sp, align) { try { g.letterSpacing = sp + "px"; } catch (e) {} g.textAlign = align || "left"; g.fillText(t, x, y); g.textAlign = "left"; try { g.letterSpacing = "0px"; } catch (e) {} }
+function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+const EMJ = /\p{Extended_Pictographic}/u;
+
+function base(tema) {
+  const claro = tema === "creme" || tema === "ambar";
+  g.fillStyle = COR[tema]; g.fillRect(0, 0, W, H);
+  const L = claro ? LOGO_P : LOGO_B; if (L) { const hh = 64; g.drawImage(L, M, 64, hh * L.width / L.height, hh); }
+  return { fg: claro ? COR.noite : COR.creme, acc: tema === "ambar" ? COR.creme : COR.ambar, k: tema === "ambar" ? COR.noite : COR.ambar };
+}
+function rodape(fg, direita) {
+  g.fillStyle = fg; g.globalAlpha = .75; font(800, 24);
+  spaced((musica() + " · GBA Worship").toUpperCase(), M, H - 64, 3);
+  if (direita) { spaced(direita, W - M - 56, H - 64, 3, "right"); g.lineWidth = 3.5; g.strokeStyle = fg; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); g.moveTo(W - M - 40, H - 72); g.lineTo(W - M, H - 72); g.moveTo(W - M - 14, H - 86); g.lineTo(W - M, H - 72); g.lineTo(W - M - 14, H - 58); g.stroke(); }
+  g.globalAlpha = 1;
+}
+const musica = () => ($("mus").value.trim() || "Nome da música");
+function lista() {
+  const out = [];
+  for (let i = 1; i <= MAX; i++) { const t = $("t" + i).value.trim(); if (t) out.push({ t, c: $("c" + i).value.trim() }); }
+  return out;
+}
+function curta(x) { if (x.c) return x.c; const w = x.t.replace(/\s+/g, " ").split(" "); return w.length > 7 ? w.slice(0, 7).join(" ") + "…" : x.t.replace(/\s+/g, " "); }
+
+// ---------- cards ----------
+function capa(n) {
+  const T = base("noite");
+  const F = FOTO || FOTO_PAD;
+  if (F) { const s = Math.max(W / F.width, H / F.height), w = F.width * s, h = F.height * s; g.drawImage(F, (W - w) / 2, (H - h) * .15, w, h); }
+  const gr = g.createLinearGradient(0, 0, 0, H);
+  gr.addColorStop(0, "rgba(38,50,58,.1)"); gr.addColorStop(.4, "rgba(38,50,58,.35)"); gr.addColorStop(.72, "rgba(38,50,58,.96)"); gr.addColorStop(1, "rgba(38,50,58,1)");
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  if (LOGO_B) { const hh = 64; g.drawImage(LOGO_B, M, 64, hh * LOGO_B.width / LOGO_B.height, hh); }
+  font(600, 34); const sub = wrap("Separamos " + n + " trechos. Arrasta, lê com calma e conta pra gente qual fala com você.", 840);
+  const subH = sub.length * 46, yTitleEnd = H - 190 - subH - 28;
+  font(400, 168, "a"); const lh = 168 * .86;
+  const linhas = [["QUAL TRECHO", COR.creme], ["É A SUA", COR.creme], ["ORAÇÃO?", COR.ambar]];
+  linhas.forEach((l, i) => { g.fillStyle = l[1]; g.fillText(l[0], M, yTitleEnd - (2 - i) * lh); });
+  g.fillStyle = COR.ambar; font(800, 26); spaced((musica() + " · GBA Worship").toUpperCase(), M, yTitleEnd - 2 * lh - 168 * .8 - 24, 6);
+  g.fillStyle = COR.suave; font(600, 34); sub.forEach((l, i) => g.fillText(l, M, yTitleEnd + 28 + 34 + i * 46));
+  rodape(COR.creme, "ARRASTA");
+}
+function trecho(i, n, txt, tema) {
+  const T = base(tema);
+  g.fillStyle = T.fg; g.globalAlpha = .6; font(800, 24); spaced(i + " / " + n, W - M, 96, 4, "right"); g.globalAlpha = 1;
+  const up = txt.toUpperCase();
+  let s = 112, lines, steps, th;
+  for (;;) { font(400, s, "a"); lines = wrap(up, W - M * 2); steps = lines.map((l, k) => k === 0 ? 0 : (EMJ.test(l) || EMJ.test(lines[k - 1]) ? s * 1.18 : s * .94)); th = steps.reduce((a, b) => a + b, 0) + s * .86; if (th <= 700 || s <= 56) break; s -= 4; }
+  const nh = 220 * .8, total = nh + 50 + th, y0 = (H - total) / 2;
+  g.fillStyle = T.acc; font(400, 220, "a"); g.fillText(String(i).padStart(2, "0"), M, y0 + nh);
+  g.fillStyle = T.fg; font(400, s, "a"); let y = y0 + nh + 50 + s * .86; lines.forEach((l, k) => { y += steps[k]; g.fillText(l, M, y); });
+  rodape(T.fg, "");
+}
+function final(itens) {
+  const T = base("nevoa");
+  g.fillStyle = COR.ambar; font(800, 26); spaced("AGORA É COM VOCÊ", M, 250, 6);
+  g.fillStyle = COR.creme; font(400, 150, "a"); g.fillText("QUAL DESSAS", M, 250 + 40 + 129); g.fillText("É A SUA?", M, 250 + 40 + 129 * 2);
+  let y = 250 + 40 + 129 * 2 + 60; const rowGap = 18;
+  let fs = 30; const avail = H - 64 - 120 - y;
+  const medir = () => itens.reduce((a, x) => { font(600, fs); return a + Math.max(64, wrap(curta(x), W - M * 2 - 60 - 106).length * fs * 1.3) + 48 + rowGap; }, 0);
+  while (medir() > avail && fs > 20) fs -= 2;
+  itens.forEach((x, i) => {
+    font(600, fs); const ls = wrap(curta(x), W - M * 2 - 60 - 106), h = Math.max(64, ls.length * fs * 1.3) + 48;
+    g.fillStyle = "rgba(243,236,226,.1)"; rr(M, y, W - M * 2, h, 24); g.fill();
+    g.fillStyle = COR.ambar; font(400, 64, "a"); g.fillText(String(i + 1).padStart(2, "0"), M + 30, y + h / 2 + 24);
+    g.fillStyle = COR.creme; font(600, fs); const ty = y + (h - ls.length * fs * 1.3) / 2 + fs * .95; ls.forEach((l, k) => g.fillText(l, M + 30 + 106, ty + k * fs * 1.3));
+    y += h + rowGap;
+  });
+  font(800, 34); y += 30; g.fillStyle = COR.creme; const a = "Comenta o ", b = "número", c = " aqui embaixo 👇";
+  g.fillText(a, M, y); let x = M + g.measureText(a).width; g.fillStyle = COR.ambar; g.fillText(b, x, y); x += g.measureText(b).width; g.fillStyle = COR.creme; g.fillText(c, x, y);
+  rodape(COR.creme, "");
+}
+
+// ---------- montar ----------
+let canvases = [];
+function nomeArq(k, total) { const slug = musica().normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "carrossel"; return "gbaw-trechos-" + slug + "-" + String(k).padStart(2, "0") + ".png"; }
+function draw() {
+  let itens = lista(); const exemplo = !itens.length;
+  if (exemplo) itens = [1, 2, 3, 4].map(i => ({ t: "Cole o trecho " + i + " no campo ao lado", c: "Trecho " + i }));
+  const n = itens.length, total = n + 2, box = $("cards");
+  while (canvases.length < total) { const fig = document.createElement("figure"); const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const cap = document.createElement("figcaption"); fig.append(cv, cap); box.appendChild(fig); canvases.push(cv); }
+  while (canvases.length > total) { canvases.pop().parentNode.remove(); }
+  canvases.forEach((cv, k) => {
+    g = cv.getContext("2d"); g.clearRect(0, 0, W, H);
+    if (k === 0) capa(n); else if (k <= n) trecho(k, n, itens[k - 1].t, ORDEM[(cor0 + k - 1) % 4]); else final(itens);
+    const cap = cv.nextSibling; cap.innerHTML = "";
+    const sp = document.createElement("span"); sp.textContent = k === 0 ? "Capa" : k <= n ? "Trecho " + k : "Final";
+    const bt = document.createElement("button"); bt.type = "button"; bt.textContent = "Baixar"; bt.setAttribute("aria-label", "Baixar " + sp.textContent);
+    bt.addEventListener("click", () => baixar(cv, nomeArq(k + 1, total)));
+    cap.append(sp, bt);
+    cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "Prévia: " + sp.textContent);
+  });
+  save();
+}
+function blobOf(cv) { return new Promise(r => cv.toBlob(r, "image/png")); }
+async function baixar(cv, nome) { const b = await blobOf(cv); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = nome; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+$("bAll").addEventListener("click", async () => { for (let k = 0; k < canvases.length; k++) { await baixar(canvases[k], nomeArq(k + 1, canvases.length)); await new Promise(r => setTimeout(r, 450)); } toast(canvases.length + " cards baixados"); });
+try { if (navigator.canShare && navigator.canShare({ files: [new File([new Blob()], "t.png", { type: "image/png" })] })) $("bSh").hidden = false; } catch (e) {}
+$("bSh").addEventListener("click", async () => { const files = []; for (let k = 0; k < canvases.length; k++) files.push(new File([await blobOf(canvases[k])], nomeArq(k + 1, canvases.length), { type: "image/png" })); try { await navigator.share({ files }); } catch (e) {} });
+function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(el._t); el._t = setTimeout(() => el.hidden = true, 2200); }
+
+// ---------- eventos ----------
+let tmr; $("form").addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(draw, 80); });
+document.querySelectorAll("#cores .chip").forEach(c => c.addEventListener("click", () => { cor0 = +c.dataset.c; document.querySelectorAll("#cores .chip").forEach(x => x.setAttribute("aria-pressed", String(x === c))); draw(); }));
+$("foto").addEventListener("change", e => { const f = e.target.files[0]; if (!f) return; const u = URL.createObjectURL(f); img(u).then(i => { if (i) { FOTO = i; $("fotoInfo").textContent = "Foto escolhida: " + f.name; draw(); } }); });
+$("fotoPad").addEventListener("click", () => { FOTO = null; $("foto").value = ""; $("fotoInfo").textContent = "Usando a foto padrão da dupla."; draw(); });
+const KEY = "gbaw-trechos";
+function save() { try { const o = { mus: $("mus").value, cor0 }; for (let i = 1; i <= MAX; i++) { o["t" + i] = $("t" + i).value; o["c" + i] = $("c" + i).value; } localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+function load() { try { const o = JSON.parse(localStorage.getItem(KEY) || "null"); if (!o) return; $("mus").value = o.mus || ""; cor0 = o.cor0 || 0; for (let i = 1; i <= MAX; i++) { $("t" + i).value = o["t" + i] || ""; $("c" + i).value = o["c" + i] || ""; } document.querySelectorAll("#cores .chip").forEach(x => x.setAttribute("aria-pressed", String(+x.dataset.c === cor0))); } catch (e) {} }
+
+(async function init() {
+  load();
+  [LOGO_B, LOGO_P, FOTO_PAD] = await Promise.all([img("assets/assinatura-branco.png"), img("assets/assinatura-preto.png"), img("assets/capa-padrao.jpg")]);
+  try { await Promise.all(["400 100px Anton", "600 30px Manrope", "700 30px Manrope", "800 30px Manrope"].map(f => document.fonts.load(f, "AÇÃ“"))); } catch (e) {}
+  draw(); document.body.dataset.ok = "1";
+})();
+})();
+</script>
+</body>
+</html>

@@ -53,6 +53,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--ambar)}
 </head>
 <body>
 <main class="wrap">
+  <nav style="display:flex;gap:10px;flex-wrap:wrap" aria-label="Geradores"><a href="./" aria-current="page" style="min-height:44px;display:inline-flex;align-items:center;padding:0 16px;border-radius:22px;font:800 14px Manrope;text-decoration:none;background:#F3ECE2;color:#26323A">Comentário</a><a href="trechos.html" style="min-height:44px;display:inline-flex;align-items:center;padding:0 16px;border-radius:22px;font:800 14px Manrope;text-decoration:none;color:#C9D3D8;border:1.5px solid rgba(169,184,191,.35)">Carrossel de trechos</a></nav>
   <h1 style="margin-top:8px">Post de <span>comentário</span></h1>
   <p class="lead">Cole o comentário, escolha o modelo e a cor, e baixe o post pronto (1080×1350).</p>
 
@@ -76,6 +77,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--ambar)}
       </fieldset>
 
       <div class="f"><label for="h1">@ de quem comentou</label><input type="text" id="h1" placeholder="@nomedeusuario"></div>
+      <div class="f"><label for="mus">Música (opcional)</label><input type="text" id="mus" placeholder="Ex.: Ainda Bem"><p class="help">Se preencher, aparece "comentou na música Ainda Bem".</p></div>
       <div class="f"><label for="t1">Comentário</label><textarea id="t1" placeholder="Cole aqui o comentário, com emojis e tudo"></textarea>
         <p class="help" id="hintB" hidden>No pôster, frases curtas (até umas 12 palavras) ficam melhores.</p></div>
       <label class="ck"><input type="checkbox" id="hide"> Censurar o @ (ex.: @ma*****)</label>
@@ -158,6 +160,7 @@ function heart(x, y, s, c) {
   g.save(); g.translate(x, y); g.scale(s / 24, s / 24); g.fillStyle = c;
   g.fill(new Path2D("M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z")); g.restore();
 }
+function onde() { const m = ($("mus").value || "").trim(); return m ? "comentou na música " + m : "comentou no " + st.r; }
 function censor(h) { const n = h.replace(/^@/, ""); return "@" + n.slice(0, 2) + "*".repeat(Math.max(4, Math.min(8, n.length - 2))); }
 function shownHandle(h) { h = (h || "").trim(); h = h ? (h.startsWith("@") ? h : "@" + h) : "@nomedeusuario"; return $("hide").checked ? censor(h) : h; }
 function theme() {
@@ -181,14 +184,14 @@ function drawA(T) {
   const h = shownHandle($("h1").value), txt = $("t1").value.trim() || "Cole o comentário ao lado.";
   const hid = !h, head = hid ? 0 : 84 + 30;
   const pad = 56, cw = W - M * 2, tw = cw - pad * 2 - (hid ? 56 : 0);
-  let s = 54, lines, lh;
-  for (;;) { font(700, s); lines = wrap(txt, tw); lh = s * 1.32; if (pad + head + lines.length * lh + pad <= 1120 || s <= 26) break; s -= 2; }
+  let s = txt.length < 70 ? 76 : txt.length < 130 ? 64 : 54, lines, lh;
+  for (;;) { font(700, s); lines = wrap(txt, tw); lh = s * 1.3; if (pad + head + lines.length * lh + pad <= 1120 || s <= 26) break; s -= 2; }
   const ch = pad + head + lines.length * lh - (lh - s) + pad, y = (H - ch) / 2;
   g.save(); g.shadowColor = "rgba(20,28,33,.35)"; g.shadowBlur = 60; g.shadowOffsetY = 30; g.fillStyle = cardBg; rr(M, y, cw, ch, 36); g.fill(); g.restore();
   if (!hid) {
     avatar(M + pad, y + pad, 84, h, COR.nevoa, COR.creme);
     g.fillStyle = cardFg; font(800, 30); g.fillText(h, M + pad + 108, y + pad + 38);
-    font(600, 22); g.fillStyle = st.t === "creme" ? COR.clara : COR.nevoa; g.fillText("comentou no " + st.r, M + pad + 108, y + pad + 70);
+    font(600, 22); g.fillStyle = st.t === "creme" ? COR.clara : COR.nevoa; g.fillText(onde(), M + pad + 108, y + pad + 70);
   }
   heart(M + cw - pad - 34, y + pad + (hid ? 4 : 25), 34, COR.ambar);
   g.fillStyle = cardFg; font(700, s);
@@ -207,7 +210,7 @@ function drawB(T) {
   g.fillStyle = T.fg; font(400, s, "a");
   let yy = y0 + 130 + s * .86; lines.forEach((l, i) => { yy += steps[i]; g.fillText(l, M, yy); });
   const h = shownHandle($("h1").value);
-  if (h) { g.fillStyle = T.acc; g.fillRect(M, H - 64 - 14, 60, 4); g.fillStyle = T.fg; font(800, 30); g.fillText(h, M + 78, H - 64); const hw = g.measureText(h).width; font(600, 26); g.globalAlpha = .75; g.fillText("  comentou no " + st.r, M + 78 + hw, H - 64); g.globalAlpha = 1; }
+  if (h) { g.fillStyle = T.acc; g.fillRect(M, H - 64 - 14, 60, 4); g.fillStyle = T.fg; font(800, 30); g.fillText(h, M + 78, H - 64); const hw = g.measureText(h).width; font(600, 26); g.globalAlpha = .75; g.fillText("  " + onde(), M + 78 + hw, H - 64); g.globalAlpha = 1; }
 }
 function bubble(x, y, maxW, d, title, txt, w8, bg, fg, right, avFn) {
   const gap = d ? 22 : 0, pad = 36, tw = maxW - pad * 2 - d - gap, top = title ? 28 + 14 : -6;
@@ -272,7 +275,7 @@ function sync() {
 document.querySelectorAll("#mods .chip").forEach(c => c.addEventListener("click", () => { st.v = c.dataset.v; sync(); draw(); }));
 document.querySelectorAll("#temas .chip").forEach(c => c.addEventListener("click", () => { st.t = c.dataset.t; sync(); draw(); }));
 document.querySelectorAll("#redes .chip").forEach(c => c.addEventListener("click", () => { st.r = c.dataset.r; sync(); draw(); }));
-const FIELDS = ["h1", "t1", "resp", "h2", "t2", "h3", "t3"];
+const FIELDS = ["h1", "mus", "t1", "resp", "h2", "t2", "h3", "t3"];
 let tmr; $("form").addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(draw, 60); });
 function save() { try { const o = { st }; FIELDS.forEach(f => o[f] = $(f).value); o.hide = $("hide").checked; localStorage.setItem("gbaw-comentario", JSON.stringify(o)); } catch (e) {} }
 function load() { try { const o = JSON.parse(localStorage.getItem("gbaw-comentario") || "null"); if (!o) return; Object.assign(st, o.st || {}); FIELDS.forEach(f => { if (o[f] != null) $(f).value = o[f]; }); $("hide").checked = !!o.hide; } catch (e) {} }
