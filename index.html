@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Gerador de comentários · GBA Worship</title>
+<meta name="theme-color" content="#1B242A">
+<link rel="icon" href="assets/logo.png">
+<style>
+@font-face{font-family:'Anton';src:url(assets/anton.woff2) format('woff2');font-display:block;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F}
+@font-face{font-family:'Anton';src:url(assets/anton-ext.woff2) format('woff2');font-display:block;unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:'Manrope';font-weight:600;src:url(assets/manrope-600.woff2) format('woff2');font-display:block}
+@font-face{font-family:'Manrope';font-weight:700;src:url(assets/manrope-700.woff2) format('woff2');font-display:block}
+@font-face{font-family:'Manrope';font-weight:800;src:url(assets/manrope-800.woff2) format('woff2');font-display:block}
+:root{--noite:#26323A;--funda:#3E505B;--nevoa:#5E7480;--clara:#A9B8BF;--suave:#C9D3D8;--creme:#F3ECE2;--ambar:#E98A3A;--bg:#1B242A}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--creme);font-family:Manrope,system-ui,sans-serif;line-height:1.5;padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom))}
+.wrap{max-width:1080px;margin:0 auto}
+.top{display:flex;align-items:center;gap:12px}
+.ib{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--creme);background:rgba(38,50,58,.8);text-decoration:none}
+.ib svg{width:22px;height:22px}
+h1{margin:18px 0 4px;font:400 clamp(44px,11vw,72px)/.9 Anton,Impact,sans-serif;text-transform:uppercase}
+h1 span{color:var(--ambar)}
+.lead{margin:8px 0 0;color:var(--suave);font-weight:600;font-size:15px}
+.grid{display:grid;gap:24px;margin-top:24px}
+@media (min-width:900px){.grid{grid-template-columns:400px 1fr;align-items:start}.prev{position:sticky;top:16px}}
+fieldset{border:0;padding:0;margin:0 0 20px}
+legend,label{display:block;font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--clara);margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 16px;border-radius:22px;border:1.5px solid rgba(169,184,191,.35);background:transparent;color:var(--suave);font:800 14px Manrope;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.chip[aria-pressed="true"]{background:var(--creme);color:var(--noite);border-color:var(--creme)}
+.chip i{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(243,236,226,.5)}
+.f{margin-bottom:16px}
+input[type=text],textarea{width:100%;font:600 16px Manrope;color:var(--creme);background:var(--noite);border:1.5px solid rgba(169,184,191,.25);border-radius:14px;padding:13px 14px}
+textarea{min-height:120px;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:var(--ambar)}
+.chip:focus-visible,.btn:focus-visible,.ib:focus-visible,.ck input:focus-visible{outline:3px solid var(--ambar);outline-offset:3px}
+.help{font-size:13px;color:var(--clara);margin-top:6px}
+.ck{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--suave);text-transform:none;letter-spacing:0;cursor:pointer;min-height:44px}
+.ck input{width:22px;height:22px;accent-color:var(--ambar)}
+.extra{border-top:1px solid rgba(169,184,191,.15);padding-top:16px;margin-top:4px}
+.prev canvas{width:100%;height:auto;border-radius:14px;display:block;box-shadow:0 20px 50px rgba(0,0,0,.4);background:var(--noite)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.btn{flex:1;min-width:150px;min-height:52px;border-radius:14px;border:0;font:800 15px Manrope;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.btn svg{width:20px;height:20px}
+.btn.pri{background:var(--ambar);color:var(--noite)}
+.btn.sec{background:var(--funda);color:var(--creme)}
+.btn:active{transform:scale(.98)}
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--creme);color:var(--noite);font-weight:800;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1 style="margin-top:8px">Post de <span>comentário</span></h1>
+  <p class="lead">Cole o comentário, escolha o modelo e a cor, e baixe o post pronto (1080×1350).</p>
+
+  <div class="grid">
+    <form id="form" autocomplete="off" onsubmit="return false">
+      <fieldset><legend>Modelo</legend>
+        <div class="chips" id="mods">
+          <button type="button" class="chip" data-v="A" aria-pressed="true">Destaque</button>
+          <button type="button" class="chip" data-v="B" aria-pressed="false">Pôster</button>
+          <button type="button" class="chip" data-v="C" aria-pressed="false">Resposta</button>
+          <button type="button" class="chip" data-v="D" aria-pressed="false">Mural (3)</button>
+        </div>
+      </fieldset>
+      <fieldset><legend>Fundo</legend>
+        <div class="chips" id="temas">
+          <button type="button" class="chip" data-t="nevoa" aria-pressed="true"><i style="background:#5E7480"></i>Névoa</button>
+          <button type="button" class="chip" data-t="creme" aria-pressed="false"><i style="background:#F3ECE2"></i>Creme</button>
+          <button type="button" class="chip" data-t="noite" aria-pressed="false"><i style="background:#26323A"></i>Escuro</button>
+          <button type="button" class="chip" data-t="ambar" aria-pressed="false"><i style="background:#E98A3A"></i>Âmbar</button>
+        </div>
+      </fieldset>
+
+      <div class="f"><label for="h1">@ de quem comentou</label><input type="text" id="h1" placeholder="@nomedeusuario"></div>
+      <div class="f"><label for="t1">Comentário</label><textarea id="t1" placeholder="Cole aqui o comentário, com emojis e tudo"></textarea>
+        <p class="help" id="hintB" hidden>No pôster, frases curtas (até umas 12 palavras) ficam melhores.</p></div>
+      <label class="ck"><input type="checkbox" id="hide"> Esconder o @ (mostra só a inicial)</label>
+
+      <div class="extra" id="exC" hidden>
+        <div class="f"><label for="resp">Resposta do @gbaworship</label><textarea id="resp" placeholder="Escreva a resposta de vocês"></textarea></div>
+      </div>
+      <div class="extra" id="exD" hidden>
+        <div class="f"><label for="h2">2º comentário · @</label><input type="text" id="h2" placeholder="@outrapessoa"></div>
+        <div class="f"><label for="t2">2º comentário</label><textarea id="t2"></textarea></div>
+        <div class="f"><label for="h3">3º comentário · @</label><input type="text" id="h3" placeholder="@maisumfa"></div>
+        <div class="f"><label for="t3">3º comentário</label><textarea id="t3"></textarea></div>
+      </div>
+    </form>
+
+    <section class="prev" aria-label="Prévia">
+      <canvas id="cv" width="1080" height="1350" role="img" aria-label="Prévia do post"></canvas>
+      <div class="actions">
+        <button type="button" class="btn pri" id="bDl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Baixar PNG</button>
+        <button type="button" class="btn sec" id="bSh" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 8l5-5 5 5M5 14v6h14v-6"/></svg>Compartilhar</button>
+      </div>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const W = 1080, H = 1350, M = 72;
+const COR = { noite:"#26323A", funda:"#3E505B", nevoa:"#5E7480", suave:"#C9D3D8", creme:"#F3ECE2", ambar:"#E98A3A", areia:"#E4DCCF", clara:"#A9B8BF" };
+const EMO = ", 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif";
+const cv = $("cv"), g = cv.getContext("2d");
+const img = src => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
+let LOGO_B, LOGO_P;
+const st = { v: "A", t: "nevoa" };
+
+// ---------- helpers de texto ----------
+function font(w, s, fam) { g.font = w + " " + s + "px " + (fam === "a" ? "Anton" + EMO : "Manrope" + EMO); }
+function wrap(text, maxW) {
+  const out = [];
+  String(text).split(/\n/).forEach(par => {
+    const words = par.split(/\s+/).filter(Boolean); let line = "";
+    if (!words.length) { out.push(""); return; }
+    words.forEach(w => { const t = line ? line + " " + w : w; if (g.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; });
+    out.push(line);
+  });
+  return out;
+}
+function spaced(text, x, y, sp) { try { g.letterSpacing = sp + "px"; } catch (e) {} g.fillText(text, x, y); try { g.letterSpacing = "0px"; } catch (e) {} }
+function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function avatar(x, y, d, h, bg, fg) {
+  g.fillStyle = bg; g.beginPath(); g.arc(x + d / 2, y + d / 2, d / 2, 0, 7); g.fill();
+  const ch = (h || "?").replace(/^@/, "").charAt(0).toUpperCase() || "?";
+  font(800, Math.round(d * .4)); g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(ch, x + d / 2, y + d / 2 + 2);
+  g.textAlign = "left"; g.textBaseline = "alphabetic";
+}
+function logoAv(x, y, d) {
+  g.fillStyle = COR.noite; g.beginPath(); g.arc(x + d / 2, y + d / 2, d / 2, 0, 7); g.fill();
+  if (LOGO_B) { const w = d * .66, hh = w * LOGO_B.height / LOGO_B.width; g.drawImage(LOGO_B, x + (d - w) / 2, y + (d - hh) / 2, w, hh); }
+}
+function heart(x, y, s, c) {
+  g.save(); g.translate(x, y); g.scale(s / 24, s / 24); g.fillStyle = c;
+  g.fill(new Path2D("M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z")); g.restore();
+}
+function shownHandle(h) { if ($("hide").checked) return ""; h = (h || "").trim(); return h ? (h.startsWith("@") ? h : "@" + h) : "@nomedeusuario"; }
+function theme() {
+  const t = st.t;
+  const claro = t === "creme" || t === "ambar";
+  return { bg: COR[t] || COR.noite, fg: claro ? COR.noite : COR.creme,
+    wm: t === "creme" ? "rgba(38,50,58,.06)" : t === "ambar" ? "rgba(38,50,58,.09)" : t === "nevoa" ? "rgba(243,236,226,.09)" : "rgba(243,236,226,.06)",
+    acc: t === "ambar" ? COR.noite : COR.ambar, acc2: t === "ambar" ? COR.creme : COR.ambar,
+    logo: claro ? LOGO_P : LOGO_B };
+}
+function base(T, wm, logoPos) {
+  g.fillStyle = T.bg; g.fillRect(0, 0, W, H);
+  if (wm) { font(400, 640, "a"); g.fillStyle = T.wm; g.textAlign = "right"; g.textBaseline = "top"; g.fillText("“", W - 40, 40); g.textAlign = "left"; g.textBaseline = "alphabetic"; }
+  const L = T.logo; if (L) { const hh = 64, w = hh * L.width / L.height; g.drawImage(L, M, logoPos === "bottom" ? H - 64 - hh : 64, w, hh); }
+}
+
+// ---------- modelos ----------
+function drawA(T) {
+  base(T, true);
+  const cardBg = st.t === "creme" ? COR.noite : COR.creme, cardFg = st.t === "creme" ? COR.creme : COR.noite;
+  const h = shownHandle($("h1").value), txt = $("t1").value.trim() || "Cole o comentário ao lado.";
+  const pad = 56, cw = W - M * 2, tw = cw - pad * 2;
+  let s = 54, lines, lh;
+  for (;;) { font(700, s); lines = wrap(txt, tw); lh = s * 1.32; if (pad + 84 + 30 + lines.length * lh + pad <= 1120 || s <= 26) break; s -= 2; }
+  const ch = pad + 84 + 30 + lines.length * lh - (lh - s) + pad, y = (H - ch) / 2;
+  g.save(); g.shadowColor = "rgba(20,28,33,.35)"; g.shadowBlur = 60; g.shadowOffsetY = 30; g.fillStyle = cardBg; rr(M, y, cw, ch, 36); g.fill(); g.restore();
+  avatar(M + pad, y + pad, 84, $("hide").checked ? "•" : h, COR.nevoa, COR.creme);
+  g.fillStyle = cardFg; font(800, 30); g.fillText(h || "Comentário", M + pad + 108, y + pad + 38);
+  font(600, 22); g.fillStyle = st.t === "creme" ? COR.clara || "#A9B8BF" : COR.nevoa; g.fillText("comentou", M + pad + 108, y + pad + 70);
+  heart(M + cw - pad - 34, y + pad + 25, 34, COR.ambar);
+  g.fillStyle = cardFg; font(700, s);
+  lines.forEach((l, i) => g.fillText(l, M + pad, y + pad + 84 + 30 + s + i * lh));
+}
+function drawB(T) {
+  base(T, false);
+  const txt = ($("t1").value.trim() || "Cole o comentário ao lado.").toUpperCase();
+  let s = 130, lines, lh;
+  for (;;) { font(400, s, "a"); lines = wrap(txt, W - M * 2); lh = s * .95; if (lines.length * lh <= 780 || s <= 50) break; s -= 4; }
+  const block = 110 + 20 + lines.length * lh, y0 = (H - block) / 2 - 30;
+  font(400, 220, "a"); g.fillStyle = T.acc; g.textBaseline = "top"; g.fillText("“", M, y0 - 20); g.textBaseline = "alphabetic";
+  g.fillStyle = T.fg; font(400, s, "a");
+  lines.forEach((l, i) => g.fillText(l, M, y0 + 130 + s * .86 + i * lh));
+  const h = shownHandle($("h1").value);
+  if (h) { g.fillStyle = T.acc; g.fillRect(M, H - 64 - 14, 60, 4); g.fillStyle = T.fg; font(800, 30); g.fillText(h, M + 78, H - 64); }
+}
+function bubble(x, y, maxW, d, title, txt, w8, bg, fg, right, avFn) {
+  const pad = 36, gap = 22, tw = maxW - pad * 2 - d - gap;
+  font(w8, 34); const lines = wrap(txt, tw), lh = 34 * 1.35;
+  let wMax = 0; lines.forEach(l => wMax = Math.max(wMax, g.measureText(l).width)); font(800, 30); wMax = Math.max(wMax, g.measureText(title).width);
+  const bw = Math.min(maxW, pad * 2 + d + gap + wMax + 4), bh = Math.max(d, 40 + 10 + lines.length * lh) + pad * 2 - 10;
+  const bx = right ? W - M - bw : x;
+  g.fillStyle = bg; rr(bx, y, bw, bh, 30); g.fill();
+  avFn(bx + pad, y + pad, d);
+  g.fillStyle = fg; font(800, 30); g.fillText(title, bx + pad + d + gap, y + pad + 28);
+  font(w8, 34); lines.forEach((l, i) => g.fillText(l, bx + pad + d + gap, y + pad + 28 + 14 + 34 + i * lh));
+  return bh;
+}
+function drawC(T) {
+  base(T, true);
+  g.fillStyle = T.acc; font(800, 26); spaced("VOCÊS FALAM,", M, 210, 6);
+  g.fillStyle = T.fg; font(400, 120, "a"); g.fillText("A GENTE", M, 345); g.fillText("RESPONDE", M, 450);
+  const h = shownHandle($("h1").value);
+  const b1bg = st.t === "noite" ? COR.funda : COR.noite;
+  const t1 = $("t1").value.trim() || "Cole o comentário ao lado.", r = $("resp").value.trim() || "Escreva a resposta de vocês.";
+  const y1 = 560, hb = bubble(M, y1, 840, 84, h || "Comentário", t1, 600, b1bg, COR.creme, false, (x, y, d) => avatar(x, y, d, $("hide").checked ? "•" : h, COR.nevoa, COR.creme));
+  bubble(M, y1 + hb + 22, 780, 84, "gbaworship", r, 700, st.t === "creme" ? COR.suave : COR.creme, COR.noite, true, logoAv);
+}
+function drawD(T) {
+  base(T, true, "bottom");
+  g.fillStyle = T.acc; font(800, 26); spaced("NO NOSSO PERFIL", M, 90, 6);
+  font(400, 150, "a"); g.fillStyle = T.fg; g.fillText("VOCÊS", M, 270); g.fillStyle = T.acc2; g.fillText("DISSERAM", M, 399);
+  const items = [[$("h1").value, $("t1").value], [$("h2").value, $("t2").value], [$("h3").value, $("t3").value]].filter(x => x[1].trim());
+  if (!items.length) items.push(["", "Cole o comentário ao lado."]);
+  const bgs = st.t === "creme" ? [COR.areia, COR.suave, COR.areia] : st.t === "nevoa" ? [COR.noite, COR.funda, COR.noite] : [COR.funda, COR.nevoa, COR.funda];
+  const fg = st.t === "creme" ? COR.noite : COR.creme;
+  let y = 480, s = 32;
+  // reduz a letra se não couber
+  for (;;) {
+    let tot = 0; font(600, s);
+    items.forEach((it, i) => { const w = W - M * 2 - (i ? 60 : 0) - 72 - 84 - 24; tot += Math.max(84, 36 + 8 + wrap(it[1].trim(), w).length * s * 1.38) + 64 + 22; });
+    if (y + tot <= H - 160 || s <= 22) break; s -= 2;
+  }
+  items.forEach((it, i) => {
+    const x = M + (i === 1 ? 60 : 0), w = W - M * 2 - (i ? 60 : 0), tw = w - 72 - 84 - 24;
+    const h = $("hide").checked ? "" : (it[0].trim() ? (it[0].trim().startsWith("@") ? it[0].trim() : "@" + it[0].trim()) : "@seguidor");
+    font(600, s); const lines = wrap(it[1].trim(), tw), lh = s * 1.38, ch = Math.max(84, 36 + 8 + lines.length * lh) + 64;
+    g.fillStyle = bgs[i]; rr(x, y, w, ch, 28); g.fill();
+    avatar(x + 36, y + 32, 84, h || "•", bgs[i] === COR.nevoa ? COR.noite : COR.nevoa, COR.creme);
+    g.fillStyle = fg; font(800, 28); g.fillText(h || "Comentário", x + 36 + 84 + 24, y + 32 + 30);
+    font(600, s); lines.forEach((l, k) => g.fillText(l, x + 36 + 84 + 24, y + 32 + 30 + 12 + s + k * lh));
+    y += ch + 22;
+  });
+}
+function draw() {
+  const T = theme(); g.clearRect(0, 0, W, H);
+  ({ A: drawA, B: drawB, C: drawC, D: drawD })[st.v](T);
+  save();
+}
+
+// ---------- UI ----------
+function sync() {
+  $("exC").hidden = st.v !== "C"; $("exD").hidden = st.v !== "D"; $("hintB").hidden = st.v !== "B";
+  document.querySelectorAll("#mods .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.v === st.v)));
+  document.querySelectorAll("#temas .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.t === st.t)));
+}
+document.querySelectorAll("#mods .chip").forEach(c => c.addEventListener("click", () => { st.v = c.dataset.v; sync(); draw(); }));
+document.querySelectorAll("#temas .chip").forEach(c => c.addEventListener("click", () => { st.t = c.dataset.t; sync(); draw(); }));
+const FIELDS = ["h1", "t1", "resp", "h2", "t2", "h3", "t3"];
+let tmr; $("form").addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(draw, 60); });
+function save() { try { const o = { st }; FIELDS.forEach(f => o[f] = $(f).value); o.hide = $("hide").checked; localStorage.setItem("gbaw-comentario", JSON.stringify(o)); } catch (e) {} }
+function load() { try { const o = JSON.parse(localStorage.getItem("gbaw-comentario") || "null"); if (!o) return; Object.assign(st, o.st || {}); FIELDS.forEach(f => { if (o[f] != null) $(f).value = o[f]; }); $("hide").checked = !!o.hide; } catch (e) {} }
+function fname() { const h = ($("h1").value || "").replace(/[^a-z0-9._-]/gi, ""); return "gbaw-comentario-" + st.v + (h ? "-" + h : "") + ".png"; }
+function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(el._t); el._t = setTimeout(() => el.hidden = true, 2200); }
+$("bDl").addEventListener("click", () => cv.toBlob(b => { const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = fname(); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Post baixado"); }, "image/png"));
+if (navigator.canShare) {
+  try { if (navigator.canShare({ files: [new File([new Blob()], "t.png", { type: "image/png" })] })) $("bSh").hidden = false; } catch (e) {}
+}
+$("bSh").addEventListener("click", () => cv.toBlob(async b => { try { await navigator.share({ files: [new File([b], fname(), { type: "image/png" })] }); } catch (e) {} }, "image/png"));
+
+(async function init() {
+  load(); sync();
+  [LOGO_B, LOGO_P] = await Promise.all([img("assets/assinatura-branco.png"), img("assets/assinatura-preto.png")]);
+  try { await Promise.all(["400 100px Anton", "600 30px Manrope", "700 30px Manrope", "800 30px Manrope"].map(f => document.fonts.load(f, "AÇÃ“"))); } catch (e) {}
+  draw();
+  document.body.dataset.ok = "1";
+})();
+})();
+</script>
+</body>
+</html>
